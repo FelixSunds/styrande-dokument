@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produktionslinjeschema – Sunds Industrier</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C0392B;--red-bg:#FDEDEC;--red-text:#922B21;
+  --green:#1A7A4C;--green-bg:#EAFAF1;--green-text:#1A5E38;
+  --amber:#B7770D;--amber-bg:#FEF9E7;--amber-text:#7D6608;
+  --blue:#1565C0;--blue-bg:#EBF5FB;--blue-text:#0D47A1;
+  --border:#DDE1E4;--bg:#F7F8FA;--surface:#fff;
+  --text:#1A1F2C;--muted:#6B7685;
+  --font:'Segoe UI',system-ui,sans-serif;
+  --header-bg:#1C2A35;
+}
+html{font-size:13px;font-family:var(--font);background:var(--bg);color:var(--text)}
+body{padding:14px 16px 24px;min-width:600px}
+
+/* Header */
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.hdr-left h1{font-size:17px;font-weight:700;color:var(--header-bg);letter-spacing:-.3px}
+.hdr-left p{font-size:11px;color:var(--muted);margin-top:3px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.snapshot{font-size:11px;background:var(--header-bg);color:#CFD8DC;padding:3px 9px;border-radius:3px;white-space:nowrap}
+.legend{display:flex;gap:10px;font-size:11px}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;border-top:3px solid transparent}
+.metric.danger{border-top-color:var(--red)}.metric.success{border-top-color:var(--green)}
+.metric.warning{border-top-color:var(--amber)}.metric.info{border-top-color:var(--blue)}
+.metric.neutral{border-top-color:#90A4AE}
+.m-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:5px}
+.m-value{font-size:24px;font-weight:700;line-height:1}
+.metric.danger .m-value{color:var(--red)}.metric.success .m-value{color:var(--green)}
+.metric.warning .m-value{color:var(--amber)}.metric.info .m-value{color:var(--blue)}
+.metric.neutral .m-value{color:#546E7A}
+.m-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* Controls */
+.controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.btn-filter{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;background:var(--surface);cursor:pointer;color:var(--text);font-family:var(--font);transition:all .15s;white-space:nowrap}
+.btn-filter:hover{background:#ECEFF1}.btn-filter.active{background:var(--header-bg);color:#fff;border-color:var(--header-bg)}
+.search{font-size:12px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;font-family:var(--font);outline:none;margin-left:auto;width:190px;background:var(--surface);color:var(--text)}
+.search:focus{border-color:#78909C}
+
+/* Table */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+col.c1{width:100px}col.c2{width:auto}col.c3{width:130px}col.c4{width:50px}col.c5{width:76px}col.c6{width:155px}col.c7{width:215px}
+thead th{background:var(--header-bg);color:#CFD8DC;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;z-index:2}
+thead th:hover{background:#263E4D}
+thead th .si{opacity:.4;margin-left:3px;font-size:9px}
+thead th.sorted .si{opacity:1}
+tbody tr{border-bottom:1px solid #EEF0F2;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F4F6F8!important}
+tbody td{padding:7px 10px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tbody td.op-td{white-space:normal}
+
+/* Status */
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:.03em}
+.badge.overdue{background:var(--red-bg);color:var(--red-text)}
+.badge.today{background:var(--green-bg);color:var(--green-text)}
+.badge.upcoming{background:#EDE7F6;color:#512DA8}
+
+/* Row tinting */
+tr.row-overdue{background:#FFF8F7!important}
+tr.row-today{background:#F2FBF6!important}
+
+/* Progress */
+.pcell{display:flex;align-items:center;gap:6px}
+.pbar{flex:1;height:5px;background:#ECEFF1;border-radius:3px;overflow:hidden;min-width:50px}
+.pfill{height:100%;border-radius:3px}
+.p-lo{background:#EF9A9A}.p-mi{background:#FFB74D}.p-hi{background:#81C784}.p-ok{background:#4CAF50}
+.ppct{font-size:10px;font-weight:700;color:var(--muted);min-width:30px;text-align:right}
+
+/* Op chips */
+.ops{display:flex;flex-wrap:wrap;gap:3px}
+.chip{font-size:9px;padding:1px 4px;border-radius:2px;border:1px solid;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.done{background:var(--green-bg);color:var(--green-text);border-color:#A9DFBF}
+.chip.active{background:var(--blue-bg);color:var(--blue-text);border-color:#90CAF9;font-weight:700}
+.chip.pending{background:#F5F5F5;color:#9E9E9E;border-color:#E0E0E0}
+
+/* Footer */
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11px;color:var(--muted)}
+.footer a{color:var(--muted);text-decoration:none}
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+
+@media(max-width:860px){
+  .metrics{grid-template-columns:repeat(3,1fr)}
+  col.c3,col.c7{display:none}
+  thead th:nth-child(3),tbody td:nth-child(3),thead th:nth-child(7),tbody td:nth-child(7){display:none}
+}
+@media(max-width:580px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  col.c4{display:none}thead th:nth-child(4),tbody td:nth-child(4){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>Produktionslinjeschema</h1>
+    <p>Sunds Industrier AB &mdash; Startade tillverkningsorder (Monitor ERP)</p>
+  </div>
+  <div class="hdr-right">
+    <div class="snapshot">Snapshot: Fredag 13 mars 2026</div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#C0392B"></span>Försenad</span>
+      <span><span class="legend-dot" style="background:#1A7A4C"></span>Klar idag</span>
+      <span><span class="legend-dot" style="background:#7B1FA2"></span>Kommande</span>
+    </div>
+  </div>
+</div>
+
+<div class="metrics" id="metrics"></div>
+
+<div class="controls">
+  <button class="btn-filter active" data-f="all" onclick="setFilter('all')">Alla <span id="cnt-all"></span></button>
+  <button class="btn-filter" data-f="overdue" onclick="setFilter('overdue')">&#x26A0;&#xFE0F; Försenade <span id="cnt-overdue"></span></button>
+  <button class="btn-filter" data-f="today" onclick="setFilter('today')">&#x2705; Klar idag <span id="cnt-today"></span></button>
+  <button class="btn-filter" data-f="upcoming" onclick="setFilter('upcoming')">&#x1F4C5; Kommande <span id="cnt-upcoming"></span></button>
+  <input class="search" type="text" placeholder="Sök order, artikel, artikelnr..." oninput="onSearch(this.value)">
+</div>
+
+<div class="tbl-wrap">
+<table>
+  <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"></colgroup>
+  <thead><tr>
+    <th onclick="doSort('order')">Order <span class="si" id="si-order">&#8597;</span></th>
+    <th onclick="doSort('desc')">Artikel <span class="si" id="si-desc">&#8597;</span></th>
+    <th onclick="doSort('partNumber')">Artikelnr <span class="si" id="si-partNumber">&#8597;</span></th>
+    <th onclick="doSort('qty')">Qty <span class="si" id="si-qty">&#8597;</span></th>
+    <th onclick="doSort('finish')">Slutdat. <span class="si" id="si-finish">&#8595;</span></th>
+    <th onclick="doSort('framdrift')">Framdrift <span class="si" id="si-framdrift">&#8597;</span></th>
+    <th>Operationer</th>
+  </tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+
+<div class="footer">
+  <span id="fcnt"></span>
+  <span>Data fr&aring;n Monitor ERP &mdash; <a href="https://sundsindustrier.sharepoint.com/sites/management-system" target="_blank">Ledningssystem</a></span>
+</div>
+
+<script>
+const ORDERS=[{"order": "1042710-10", "desc": "STRÖLÅDA GALVAD L=2000", "partNumber": "1051-HV3C2967M", "qty": 1, "start": "2026-02-19", "finish": "2026-03-09", "framdrift": 91.7, "statusCat": "overdue", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 200 TON", "wc": "141", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "done"}, {"desc": "TRANSPORT", "wc": "951", "status": "active"}, {"desc": "GALVANISERING LEGO", "wc": "913", "status": "active"}, {"desc": "KAP, KLIPP", "wc": "111", "status": "done"}, {"desc": "KAP, BOCKNING", "wc": "111", "status": "done"}]}, {"order": "1042814-50", "desc": "Backing Plate 500-1000 m³/h", "partNumber": "1480-20151554", "qty": 12, "start": "2026-03-04", "finish": "2026-03-11", "framdrift": 50.0, "statusCat": "overdue", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "GALVANISERING LEGO", "wc": "913", "status": "pending"}]}, {"order": "1042920-10", "desc": "CENTRERARM M TAPP HÖ", "partNumber": "1234-82099557-001", "qty": 4, "start": "2026-03-12", "finish": "2026-03-12", "framdrift": 0.0, "statusCat": "overdue", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "active"}]}, {"order": "1042814-70", "desc": "Electrical Cover Box Bottom BWT6000", "partNumber": "1480-069191", "qty": 8, "start": "2026-02-25", "finish": "2026-03-12", "framdrift": 90.0, "statusCat": "overdue", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "done"}]}, {"order": "1042919-10", "desc": "PLÅT DX 355 T=20", "partNumber": "1041-516536", "qty": 5, "start": "2026-03-13", "finish": "2026-03-13", "framdrift": 0.0, "statusCat": "today", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "active"}]}, {"order": "1042921-10", "desc": "PLÅT DX 355 T=20", "partNumber": "1234-70554753-002", "qty": 1, "start": "2026-03-13", "finish": "2026-03-13", "framdrift": 0.0, "statusCat": "today", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "active"}]}, {"order": "1042921-20", "desc": "PLÅT DX 355 T=20", "partNumber": "1234-70554753-003", "qty": 1, "start": "2026-03-13", "finish": "2026-03-13", "framdrift": 0.0, "statusCat": "today", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "active"}]}, {"order": "1042931-10", "desc": "Expansionskärl", "partNumber": "1298-HU-BV0250", "qty": 40, "start": "2026-03-13", "finish": "2026-03-13", "framdrift": 0.0, "statusCat": "today", "ops": [{"desc": "BETNING", "wc": "252", "status": "active"}]}, {"order": "1042868-10", "desc": "CHPR Disc Cover TK-IV", "partNumber": "1090-68230925", "qty": 14, "start": "2026-02-26", "finish": "2026-03-13", "framdrift": 94.3, "statusCat": "today", "ops": [{"desc": "SVETSNING/RIKTN", "wc": "231", "status": "active"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "done"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "SVETSNING, HÅRDSVETS", "wc": "231", "status": "done"}]}, {"order": "7485", "desc": "Shipping bracket", "partNumber": "1367-2-2030", "qty": 40, "start": "2026-03-06", "finish": "2026-03-16", "framdrift": 50.0, "statusCat": "upcoming", "ops": [{"desc": "LASER", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}]}, {"order": "1042839-10", "desc": "Wire saftety plate", "partNumber": "1532-602996", "qty": 320, "start": "2026-03-03", "finish": "2026-03-16", "framdrift": 25.0, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "MASKINBEARBETNING/FASNING", "wc": "171", "status": "pending"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "1042812-10", "desc": "Expansionskärl", "partNumber": "4387-BV0250", "qty": 40, "start": "2026-02-26", "finish": "2026-03-16", "framdrift": 68.8, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "active"}, {"desc": "SVETSNING", "wc": "231", "status": "active"}, {"desc": "PROVTRYCKNING", "wc": "231", "status": "pending"}, {"desc": "Betning", "wc": "252", "status": "pending"}]}, {"order": "1042814-10", "desc": "Conn. Box BWT 21m²", "partNumber": "1480-085802", "qty": 2, "start": "2026-02-24", "finish": "2026-03-16", "framdrift": 63.6, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "INSPEKTION", "wc": "263", "status": "pending"}, {"desc": "EMBALLERING", "wc": "271", "status": "pending"}]}, {"order": "1042814-30", "desc": "Conn. Box BWT EX 10-16m²", "partNumber": "1480-085504", "qty": 10, "start": "2026-02-24", "finish": "2026-03-16", "framdrift": 65.2, "statusCat": "upcoming", "ops": [{"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "active"}, {"desc": "PENETRANT KONTROLL", "wc": "261", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "EMBALLERING", "wc": "271", "status": "pending"}]}, {"order": "1042814-40", "desc": "Conn. Box BWT 8-16m²", "partNumber": "1480-085829", "qty": 6, "start": "2026-02-24", "finish": "2026-03-16", "framdrift": 66.7, "statusCat": "upcoming", "ops": [{"desc": "MONTERING/ Kontroll", "wc": "241", "status": "pending"}, {"desc": "EMBALLERING", "wc": "271", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}]}, {"order": "7496", "desc": "Algning Plate", "partNumber": "1428-400-52968", "qty": 5, "start": "2026-03-03", "finish": "2026-03-17", "framdrift": 66.7, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}]}, {"order": "7492", "desc": "DRAGPLÅT SVETS", "partNumber": "1487-P-119_10130", "qty": 2, "start": "2026-02-26", "finish": "2026-03-17", "framdrift": 66.7, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}]}, {"order": "7493", "desc": "INKLÄDNADSPLÅT TAK", "partNumber": "1487-P-119_10131", "qty": 2, "start": "2026-03-12", "finish": "2026-03-18", "framdrift": 50.0, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}]}, {"order": "1042867-10", "desc": "LÖPHJUL", "partNumber": "1249-712162073", "qty": 50, "start": "2026-03-04", "finish": "2026-03-18", "framdrift": 50.0, "statusCat": "upcoming", "ops": [{"desc": "KAP, KLIPP", "wc": "111", "status": "done"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "active"}]}, {"order": "7498", "desc": "Algning Plate", "partNumber": "1428-400-52965", "qty": 5, "start": "2026-03-04", "finish": "2026-03-18", "framdrift": 66.7, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}]}, {"order": "1042892-50", "desc": "Protective Cover", "partNumber": "2055-578457-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-20", "framdrift": 40.0, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042892-60", "desc": "Cable cover", "partNumber": "2055-578459-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-20", "framdrift": 40.0, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042866-10", "desc": "Kolv lås, vänster", "partNumber": "3038-257105", "qty": 100, "start": "2026-02-26", "finish": "2026-03-20", "framdrift": 66.7, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "KROMNING LEGO", "wc": "915", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 200 TON", "wc": "141", "status": "done"}]}, {"order": "1042828-60", "desc": "L-BALK 250x300x15 L80", "partNumber": "1492-KP-24-4-001-06", "qty": 2, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 75.0, "statusCat": "upcoming", "ops": [{"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "1042828-80", "desc": "L-BALK 297x400-550x30 L2950", "partNumber": "1492-KP-24-4-002-08", "qty": 1, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 42.9, "statusCat": "upcoming", "ops": [{"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "SVETSNING & RIKTNING", "wc": "231", "status": "pending"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}]}, {"order": "1042828-90", "desc": "L-BALK 297x400-550x30 L2950", "partNumber": "1492-KP-24-4-002-09", "qty": 1, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 42.9, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}, {"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "1042828-150", "desc": "L-BALK 320x300x15 L4000", "partNumber": "1492-KP-24-4-002-15", "qty": 3, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 60.0, "statusCat": "upcoming", "ops": [{"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "1042828-160", "desc": "L-BALK 320x500x30 L670 L670", "partNumber": "1492-KP-24-4-003-16", "qty": 1, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 57.1, "statusCat": "upcoming", "ops": [{"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "done"}]}, {"order": "1042828-170", "desc": "L-BALK 320x300-500x30 L1550", "partNumber": "1492-KP-24-4-003-17", "qty": 1, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 57.1, "statusCat": "upcoming", "ops": [{"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "done"}]}, {"order": "1042828-180", "desc": "L-BALK 320x300-500x30 L1792", "partNumber": "1492-KP-24-4-003-18", "qty": 1, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 42.9, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "active"}, {"desc": "KONSTRUKTION", "wc": "103", "status": "done"}]}, {"order": "1042828-190", "desc": "L-BALK 320x300x30 L3180", "partNumber": "1492-KP-24-4-003-19", "qty": 1, "start": "2026-02-18", "finish": "2026-03-20", "framdrift": 40.0, "statusCat": "upcoming", "ops": [{"desc": "KONSTRUKTION", "wc": "103", "status": "done"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "active"}]}, {"order": "1042888-10", "desc": "Plech", "partNumber": "2026-459057530005", "qty": 30, "start": "2026-03-06", "finish": "2026-03-24", "framdrift": 50.0, "statusCat": "upcoming", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}]}, {"order": "1042892-10", "desc": "Glove compartment insert", "partNumber": "2055-577898-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-25", "framdrift": 68.0, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "1042892-20", "desc": "Enclosure Assy", "partNumber": "2055-578182-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-25", "framdrift": 41.7, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042892-30", "desc": "Top bracket", "partNumber": "2055-578220-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-25", "framdrift": 33.3, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042892-40", "desc": "Box", "partNumber": "2055-578230-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-25", "framdrift": 42.9, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "1042892-80", "desc": "Dash holder weld", "partNumber": "2055-578938-01-01", "qty": 1, "start": "2026-03-09", "finish": "2026-03-25", "framdrift": 33.3, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042892-90", "desc": "Bracket", "partNumber": "2055-578992-01-01", "qty": 3, "start": "2026-03-09", "finish": "2026-03-25", "framdrift": 50.0, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042892-70", "desc": "Screen support", "partNumber": "2055-578623-01-01", "qty": 1, "start": "2026-03-04", "finish": "2026-03-25", "framdrift": 27.3, "statusCat": "upcoming", "ops": [{"desc": "DOKUMENTATION", "wc": "281", "status": "pending"}, {"desc": "Kantbrytning 0,3–0,5 mm.", "wc": "1197946825524703140", "status": "pending"}, {"desc": "100 % VT-provning av alla svetsar", "wc": "263", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}]}, {"order": "1042852-10", "desc": "Expansionskärl", "partNumber": "4387-BV0250", "qty": 40, "start": "2026-02-27", "finish": "2026-03-25", "framdrift": 37.5, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "pending"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "PROVTRYCKNING", "wc": "231", "status": "pending"}, {"desc": "Betning", "wc": "252", "status": "pending"}]}, {"order": "1042838-10", "desc": "CHPR disc cover TK-IV RR3300/15 (LH)", "partNumber": "1090-69228245", "qty": 15, "start": "2026-02-27", "finish": "2026-03-26", "framdrift": 86.7, "statusCat": "upcoming", "ops": [{"desc": "Hurco bäddfräs", "wc": "172", "status": "done"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "SVETSNING/RIKTNING", "wc": "231", "status": "pending"}, {"desc": "Slipning", "wc": "932", "status": "active"}]}, {"order": "7488", "desc": "TAKSAMMANSTÄLLNING", "partNumber": "1487-P-119_10100", "qty": 1, "start": "2026-03-02", "finish": "2026-03-27", "framdrift": 59.7, "statusCat": "upcoming", "ops": [{"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "BETNING", "wc": "252", "status": "pending"}]}, {"order": "7489", "desc": "NEDRE VÄGGSTÖD", "partNumber": "1487-P-119_10112", "qty": 3, "start": "2026-03-12", "finish": "2026-03-31", "framdrift": 28.6, "statusCat": "upcoming", "ops": [{"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "pending"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "pending"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}, {"desc": "KAP, KLIPP", "wc": "111", "status": "pending"}]}, {"order": "7490", "desc": "KLÄMFÄSTE STAG", "partNumber": "1487-P-119_10120", "qty": 3, "start": "2026-02-26", "finish": "2026-03-31", "framdrift": 27.3, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "pending"}, {"desc": "Hurco bäddfräs", "wc": "172", "status": "pending"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "pending"}, {"desc": "KAP, KLIPP", "wc": "111", "status": "pending"}]}, {"order": "7491", "desc": "VÄGGSTÖD SMST", "partNumber": "1487-P-119_10125", "qty": 3, "start": "2026-02-26", "finish": "2026-03-31", "framdrift": 20.0, "statusCat": "upcoming", "ops": [{"desc": "MONTERING", "wc": "241", "status": "pending"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "pending"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "pending"}, {"desc": "KAP, KLIPP", "wc": "111", "status": "pending"}]}, {"order": "1042869-10", "desc": "WIRESTYRNING", "partNumber": "1328-21546", "qty": 400, "start": "2026-02-26", "finish": "2026-04-02", "framdrift": 33.3, "statusCat": "upcoming", "ops": [{"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "FASNING", "wc": "231", "status": "pending"}, {"desc": "KANTPRESS 200 TON", "wc": "141", "status": "pending"}]}, {"order": "1042620-10", "desc": "ACID DISTRIBUTOR GCT Skhira DT", "partNumber": "1367-1042620-10", "qty": 1, "start": "2026-02-27", "finish": "2026-04-09", "framdrift": 99.6, "statusCat": "upcoming", "ops": [{"desc": "FASMASKIN", "wc": "124", "status": "done"}, {"desc": "KANTPRESS 400 TON", "wc": "141", "status": "done"}, {"desc": "LASER", "wc": "121", "status": "done"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "SVETSNING", "wc": "231", "status": "active"}, {"desc": "PENETRANT KONTROLL", "wc": "261", "status": "active"}, {"desc": "BETNING", "wc": "252", "status": "done"}, {"desc": "LASERSKÄRNING LEGO", "wc": "937", "status": "done"}, {"desc": "RÖRKRAGNING LEGO", "wc": "1295238411246629941", "status": "done"}, {"desc": "Rörbockning lego", "wc": "871783413209050613", "status": "done"}, {"desc": "KANTPRESS 400 TON, FASNING", "wc": "141", "status": "done"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "done"}, {"desc": "SVETSNING, KAPNING", "wc": "231", "status": "done"}, {"desc": "LASER  3015 & 4020", "wc": "121", "status": "done"}, {"desc": "VATTENSKÄRNING LEGO", "wc": "938", "status": "active"}, {"desc": "INVALSNING AV RÖR", "wc": "241", "status": "active"}, {"desc": "SLUTSVETSNING", "wc": "231", "status": "active"}, {"desc": "MONTERING, EMBALLERING", "wc": "241", "status": "pending"}, {"desc": "KANTPRESS 200 TON", "wc": "141", "status": "done"}, {"desc": "SVETSNING, FASNING I BÄGGE ÄNDAR", "wc": "231", "status": "done"}, {"desc": "RÖRKRAGNING", "wc": "1295238411246629941", "status": "done"}]}, {"order": "1042913-10", "desc": "MANOMETERSKÅP", "partNumber": "1051-2230-0245", "qty": 10, "start": "2026-03-12", "finish": "2026-04-16", "framdrift": 14.3, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING / Polering", "wc": "231", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}, {"desc": "KANTPRESS 200 TON", "wc": "141", "status": "pending"}]}, {"order": "1042850-10", "desc": "CHIP SLOT INSERT CHQ11 MM", "partNumber": "1090-501023528", "qty": 20, "start": "2026-04-20", "finish": "2026-04-23", "framdrift": 80.0, "statusCat": "upcoming", "ops": [{"desc": "SVETSNING", "wc": "231", "status": "pending"}, {"desc": "LASER 4020 3,5 KW", "wc": "121", "status": "done"}]}, {"order": "7497", "desc": "LÖPHJUL", "partNumber": "1249-712162073", "qty": 50, "start": "2026-04-22", "finish": "2026-04-30", "framdrift": 50.0, "statusCat": "upcoming", "ops": [{"desc": "KAP, KLIPP", "wc": "111", "status": "done"}, {"desc": "MASKINBEARBETNING", "wc": "171", "status": "pending"}]}];
+let filt='all',srch='',sCol='finish',sDir=1;
+
+function fmtD(d){if(!d)return'';const p=d.split('-');return p[2]+'/'+p[1];}
+function pClass(v){return v>=100?'p-ok':v>=66?'p-hi':v>=33?'p-mi':'p-lo';}
+function badgeHtml(c){const L={overdue:'Försenad',today:'Idag',upcoming:'Kommande'};return'<span class="badge '+c+'">'+L[c]+'</span>';}
+
+function rowHtml(o){
+  const seen=new Set(), chips=[];
+  for(const op of o.ops){
+    const k=op.desc+'|'+op.wc;
+    if(!seen.has(k)){seen.add(k);chips.push(op);}
+  }
+  const chipHtml=chips.slice(0,5).map(op=>'<span class="chip '+op.status+'" title="'+op.desc+' (WC '+op.wc+')">'+op.desc+'</span>').join('')
+    +(chips.length>5?'<span class="chip pending">+' +(chips.length-5)+'</span>':'');
+  const rc=o.statusCat==='overdue'?'row-overdue':o.statusCat==='today'?'row-today':'';
+  const dc=o.statusCat==='overdue'?'var(--red)':o.statusCat==='today'?'var(--green)':'var(--muted)';
+  return'<tr class="'+rc+'"><td><strong>'+o.order+'</strong><br>'+badgeHtml(o.statusCat)+'</td>'
+    +'<td title="'+o.desc+'">'+o.desc+'</td>'
+    +'<td style="font-size:10px;color:var(--muted)" title="'+o.partNumber+'">'+o.partNumber+'</td>'
+    +'<td style="text-align:center">'+o.qty+'</td>'
+    +'<td style="font-weight:700;font-size:12px;color:'+dc+'">'+fmtD(o.finish)+'</td>'
+    +'<td><div class="pcell"><div class="pbar"><div class="pfill '+pClass(o.framdrift)+'" style="width:'+Math.min(o.framdrift,100)+'%"></div></div><span class="ppct">'+o.framdrift+'%</span></div></td>'
+    +'<td class="op-td"><div class="ops">'+chipHtml+'</div></td></tr>';
+}
+
+function getRows(){
+  let r=ORDERS;
+  if(filt!=='all')r=r.filter(o=>o.statusCat===filt);
+  if(srch){const q=srch.toLowerCase();r=r.filter(o=>o.order.toLowerCase().includes(q)||o.desc.toLowerCase().includes(q)||o.partNumber.toLowerCase().includes(q));}
+  return[...r].sort((a,b)=>{let va=a[sCol],vb=b[sCol];if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}return va<vb?-sDir:va>vb?sDir:0;});
+}
+
+function render(){
+  const rows=getRows();
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML=rows.length?rows.map(rowHtml).join(''):'<tr><td colspan="7" class="empty">Inga order matchar filtret.</td></tr>';
+  document.getElementById('fcnt').textContent=rows.length+' order visas';
+  ['all','overdue','today','upcoming'].forEach(f=>{
+    const cnt=f==='all'?ORDERS.length:ORDERS.filter(o=>o.statusCat===f).length;
+    const el=document.getElementById('cnt-'+f);if(el)el.textContent='('+cnt+')';
+    const btn=document.querySelector('[data-f="'+f+'"]');if(btn)btn.classList.toggle('active',filt===f);
+  });
+}
+
+function setFilter(f){filt=f;render();}
+function onSearch(v){srch=v;render();}
+function doSort(c){
+  if(sCol===c)sDir=-sDir;else{sCol=c;sDir=1;}
+  document.querySelectorAll('[id^="si-"]').forEach(el=>{el.parentElement.classList.remove('sorted');el.textContent='⇅';});
+  const si=document.getElementById('si-'+c);
+  if(si){si.parentElement.classList.add('sorted');si.textContent=sDir===1?'↑':'↓';}
+  render();
+}
+
+(function initMetrics(){
+  const ov=ORDERS.filter(o=>o.statusCat==='overdue').length;
+  const td=ORDERS.filter(o=>o.statusCat==='today').length;
+  const wk=ORDERS.filter(o=>o.statusCat==='upcoming'&&o.finish<='2026-03-15').length;
+  const avg=Math.round(ORDERS.reduce((s,o)=>s+o.framdrift,0)/ORDERS.length);
+  document.getElementById('metrics').innerHTML=
+    '<div class="metric info"><div class="m-label">Aktiva order</div><div class="m-value">'+ORDERS.length+'</div><div class="m-sub">status: startad</div></div>'
+    +'<div class="metric danger"><div class="m-label">Försenade</div><div class="m-value">'+ov+'</div><div class="m-sub">slutdatum passerat</div></div>'
+    +'<div class="metric success"><div class="m-label">Klar idag</div><div class="m-value">'+td+'</div><div class="m-sub">planerat slut 13/3</div></div>'
+    +'<div class="metric warning"><div class="m-label">Denna vecka</div><div class="m-value">'+wk+'</div><div class="m-sub">t.o.m. 15 mars</div></div>'
+    +'<div class="metric neutral"><div class="m-label">Snitt framdrift</div><div class="m-value">'+avg+'%</div><div class="m-sub">alla aktiva order</div></div>';
+})();
+
+render();
+</script>
+</body>
+</html>
