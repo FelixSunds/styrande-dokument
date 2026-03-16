@@ -150,6 +150,6 @@ Kontrollera att `url`-fältet i `RAW_DATA` för det dokumentet pekar på rätt S
 ---
 
 ## Ansvarig
-
-Underhålls av **Felix** – systemadministratör och controller, Sunds Industrier AB.  
+*Prel till 17/7-26, sedan revideras*
+Underhålls av **Felix** – Sunds Industrier AB.  
 För frågor om innehållet i dokumentbiblioteket, kontakta respektive dokumentägare.
