@@ -1,22 +1,39 @@
 # Styrande Dokument – Navigator
 
-Interaktiv navigeringssida för dokumentbiblioteket **Styrande Dokument** på Sunds Industrier AB:s SharePoint-site för ledningssystemet.
+Det här repot är en **statisk webbhost via GitHub Pages** för HTML-verktyg kopplade till Sunds Industrier AB:s ledningssystem på SharePoint. Varje fil publiceras automatiskt och bäddas in på respektive SharePoint-sida via en iframe.
 
-> 🌐 **GitHub Pages-länk:** `https://felixsunds.github.io/styrande-dokument/`  
+> 🌐 **GitHub Pages bas-URL:** `https://felixsunds.github.io/sunds-management-system/`  
 > 📁 **SharePoint-site:** `https://sundsindustrier.sharepoint.com/sites/management-system`
 
 ---
 
 ## Vad är det här?
 
-En statisk HTML-fil (`styrande-dokument-navigator.html`) som bäddas in som en `<iframe>` på SharePoint-sidan. Den ersätter SharePoints inbyggda dokumentbiblioteksvy med en snabb, filtrerbar navigator med stöd för:
+Ett GitHub-repo som fungerar som värd för **statiska HTML-verktyg** som används på Sunds Industrier AB:s SharePoint-site för ledningssystemet. Filerna läggs platt i repots rot och publiceras automatiskt via GitHub Pages – ingen server eller byggprocess krävs.
 
-- **Hierarkisk filtrering per ISO-standard** (t.ex. ISO 9001 → §8 → 8.5 → 8.5.1)
-- **Filtrering per processområde, status och dokumenttyp**
-- **Fritextsökning** på dokumentnamn och standardkopplingar
-- **Direktlänk** till varje dokument i SharePoint vid klick på ett kort
+Varje verktyg bäddas in på en egen SharePoint-sida via en `<iframe>` och kan uppdateras oberoende av varandra.
 
-All data är inbäddad direkt i HTML-filen som en JSON-array (`RAW_DATA`). Det finns ingen backend – sidan är helt statisk.
+---
+
+## Filstruktur
+
+Alla filer ligger platt i repots rot. Varje HTML-fil motsvarar ett verktyg och får sin egen URL på GitHub Pages.
+
+```
+sunds-management-system/
+├── styrande-dokument-navigator.html    ← Dokumentbiblioteks-navigator (Styrande Dokument)
+├── produktions-dashboard-demo.html     ← DEMO: Produktionsschema-dashboard (Monitor ERP)
+└── README.md                           ← Den här filen
+```
+
+När ett nytt verktyg skapas läggs HTML-filen till direkt i roten och publiceras automatiskt.
+
+### Verktyg och URL:er
+
+| Fil | Beskrivning | URL |
+|---|---|---|
+| `styrande-dokument-navigator.html` | Filtrerbar navigator för dokumentbiblioteket | `https://felixsunds.github.io/sunds-management-system/styrande-dokument-navigator.html` |
+| `produktions-dashboard-demo.html` | DEMO-dashboard för produktionsschema | `https://felixsunds.github.io/sunds-management-system/produktions-dashboard-demo.html` |
 
 ---
 
@@ -83,7 +100,7 @@ GitHub Pages publicerar ändringen automatiskt inom ~30 sekunder till 2 minuter.
 
 #### 4. Verifiera
 
-Öppna `https://felixsunds.github.io/styrande-dokument/` i webbläsaren och kontrollera att:
+Öppna `https://felixsunds.github.io/sunds-management-system/` i webbläsaren och kontrollera att:
 - Tidsstämpeln i övre högra hörnet stämmer.
 - Antalet dokument (visas i rubrikraden i höger panel) stämmer.
 - Ett par dokument du vet är nya syns i listan.
@@ -92,19 +109,37 @@ GitHub Pages publicerar ändringen automatiskt inom ~30 sekunder till 2 minuter.
 
 ## Inbäddning i SharePoint
 
-Navigatorn bäddas in via en **Bädda in**-webbdel (Embed web part) på SharePoint-sidan med följande iframe-kod:
+Varje verktyg bäddas in på sin SharePoint-sida via en **Bädda in**-webbdel (Embed web part). URL-mönstret är alltid:
+
+```
+https://felixsunds.github.io/sunds-management-system/<filnamn.html>
+```
+
+Klistra in iframe-koden i webbdelen och justera `src` till rätt fil samt `height` efter behov:
 
 ```html
+<!-- Styrande Dokument Navigator -->
 <iframe
-  src="https://felixsunds.github.io/styrande-dokument/"
+  src="https://felixsunds.github.io/sunds-management-system/styrande-dokument-navigator.html"
   width="100%"
-  height="1200"
+  height="850"
   frameborder="0"
   style="border:none;">
 </iframe>
 ```
 
-SharePoint blockerar externa iframes med CSP (Content Security Policy) om inte sidan är godkänd. GitHub Pages (`github.io`) är godkänt för inbäddning i SharePoint Online via Embed-webbdelen.
+```html
+<!-- Produktionsschema Dashboard (DEMO) -->
+<iframe
+  src="https://felixsunds.github.io/sunds-management-system/produktions-dashboard-demo.html"
+  width="100%"
+  height="850"
+  frameborder="0"
+  style="border:none;">
+</iframe>
+```
+
+> GitHub Pages (`github.io`) är godkänt för inbäddning i SharePoint Online via Embed-webbdelen utan extra CSP-konfiguration.
 
 ---
 
@@ -150,6 +185,8 @@ Kontrollera att `url`-fältet i `RAW_DATA` för det dokumentet pekar på rätt S
 ---
 
 ## Ansvarig
-*Prel till 17/7-26, sedan revideras*
-Underhålls av **Felix** – Sunds Industrier AB.  
+
+Underhålls av **Felix** KTP-Projektledare, IUC Gävleborg, Sunds Industrier AB.  
 För frågor om innehållet i dokumentbiblioteket, kontakta respektive dokumentägare.
+
+*Prel till 17/7-26, sedan revideras*
